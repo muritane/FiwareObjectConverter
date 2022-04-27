@@ -21,15 +21,23 @@ class LD_Normalizer:
     # Generates an Entity Id as a URI
     @classmethod
     def _ld_id(cls, entity_id, entity_type):
+        print("_ld_id")
+        print("entity_id: ", entity_id)
+        print("entity_type: ", entity_type)
         out = entity_id
         try:
-            d = parse(entity_id, rule='URI')
+            d = parse(str(entity_id), rule='URI')
             scheme = d['scheme']
+            print("d: ", d)
+            print("scheme: ", scheme)
             if scheme not in ('urn', 'http', 'https'):
+                print("scheme not in ('urn', 'http', 'https')")
                 raise ValueError
         except ValueError:
+            print("except ValueError")
             out = cls._ngsild_uri(entity_type, entity_id)
 
+        print("out: ", out)
         return out
 
     # Generates a Relationship's object as a URI
@@ -37,7 +45,7 @@ class LD_Normalizer:
     def _ld_object(cls, attribute_name, entity_id):
         out = entity_id
         try:
-            d = parse(entity_id, rule='URI')
+            d = parse(str(entity_id), rule='URI')
             scheme = d['scheme']
             if scheme not in ('urn', 'http', 'https'):
                 raise ValueError
@@ -64,6 +72,7 @@ class LD_Normalizer:
 
         for key in entity:
             if key == 'id':
+                print("_normalized_to_ld if key == 'id'")
                 out[key] = cls._ld_id(entity['id'], entity['type'])
                 continue
 

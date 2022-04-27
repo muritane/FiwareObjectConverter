@@ -66,6 +66,7 @@ class ObjectFiwareConverter(object):
         entity.set_object(object_, data_type_dict, ignore_python_meta_data,
                           show_id_value=show_id_value, encode=encode)
         if ngsi_ld:
+            print("obj_to_fiware if ngsi_ld")
             json_ = LD_Normalizer.normalize(cls._obj(cls._json(entity)))
             return json.dumps(json_, default=cls._complex_handler, indent=indent)
         return cls._json(entity, indent)
