@@ -30,8 +30,11 @@ class ReverseEntity(object):
 
     def __init__(self, type_=None, id_=None, *args, **payload):
         self.type = type_
+        print("type_: ", type_)
         self.id = id_
+        print("id_: ", id_)
         self.payload = payload
+        print("payload: ", payload)
 
     def set_object(self, obj, use_meta_data=True, ignore_wrong_data_type=False,
                    set_attr=False, encoded=False):
@@ -42,11 +45,32 @@ class ReverseEntity(object):
         else:
             setattr(obj, 'id', quote.unquote(str(self.id)))
             setattr(obj, 'type', quote.unquote(str(self.type)))
+        print("ReverseEntity set_object obj: ", obj)
 
         for key, value in self.payload.items():
+            print("key: ", key)
+            print("value: ", value)
+            print("type(value): ", type(value))
+            if key == 'id':
+                self.id = value
+                if encoded:
+                    setattr(obj, 'id', str(self.id))
+                else:
+                    setattr(obj, 'id', quote.unquote(str(self.id)))
+                continue
+            if key == 'type':
+                self.type = value
+                if encoded:
+                    setattr(obj, 'type', str(self.type))
+                else:
+                    setattr(obj, 'type', quote.unquote(str(self.type)))
+                continue
             rea = ReverseEntityAttribute(value, use_meta_data, encoded=encoded)
             if set_attr:
                 # Just use setAttr
+                print("setattr(obj, key, rea.get_value())")
+                print("key: ", key)
+                print("rea.get_value(): ", rea.get_value())
                 setattr(obj, key, rea.get_value())
             elif key in obj.__dict__:
                 if ignore_wrong_data_type:

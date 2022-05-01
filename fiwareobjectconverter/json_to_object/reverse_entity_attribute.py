@@ -56,6 +56,7 @@ class ReverseEntityAttribute(object):
         """ By initializing we set the value in self.value
         """
         self.value = None
+        print("_dict: ", _dict)
 
         if _dict is None:
             raise ValueError(VALUE_EMPTY_MESSAGE)
@@ -63,6 +64,97 @@ class ReverseEntityAttribute(object):
         if 'type' not in _dict or 'value' not in _dict:
             # Check if a correct struct exists.
             raise ValueError(TYPE_VALUE_METADATA_NOT_DEFINED_MESSAGE)
+
+        if _dict['type'] == 'Property' and 'dataType' in _dict:
+            print("_dict['type'] == 'Property' and 'dataType' in _dict")
+            print("_dict['dataType']['value']: ", _dict['dataType']['value'])
+
+            if _dict['dataType']['value'] == '':
+                self.value = _dict['value']
+
+            elif _dict['dataType']['value'].lower() in BOOLEAN_TYPES:
+                self._set_value(bool, _dict['value'])
+
+            elif _dict['dataType']['value'].lower() in NUMERICAL_TYPES:
+                # Case something numerical
+                self._set_value(float, _dict['value'])
+                if self.value % 1 == 0.0:
+                    # Number is Integer Like, convert to int or long
+                    self._set_value_with_metadata(
+                        WHOLE_NUMBERS, useMetaData, _dict, self.value)
+
+            elif _dict['dataType']['value'].lower() in TEXT_TYPES:
+                # Case String or Unicode
+                self._set_value_with_metadata(
+                    STRING_TYPES, useMetaData, _dict, _dict['value'])
+                print("hier1")
+                if encoded:
+                    self.value = quote.unquote(self.value)
+                    print("hier2")
+
+            elif _dict['dataType']['value'].lower() in ARRAYLIKE_TYPES:
+                # Case Complex, Tuple or List
+                # First: reverse every element to Obj
+                temp_list = _dict['value']
+                temp_value = list()
+                for value in temp_list:
+                    reverse_entity_attribute = ReverseEntityAttribute(
+                        value, useMetaData)
+                    temp_value.append(reverse_entity_attribute.get_value())
+
+                # Second: decide if Complex, Tuple or List
+                self._set_value_with_metadata(
+                    COMPLEX_TYPES, useMetaData, _dict, temp_value)
+
+            elif _dict['dataType']['value'].lower() in OBJECTLIKE_TYPES:
+                # arbitary JSON object with key, value
+                temp_dict = _dict['value']
+                self.value = {}
+                for key, value in temp_dict.items():
+                    rea = ReverseEntityAttribute(value, useMetaData)
+                    self.value[key] = rea.get_value()
+
+            elif _dict['dataType']['value'].lower() == 'base64':
+                # Case we have a base64 String:
+                # First Unquote Special Characters
+                temp_value = quote.unquote(_dict['value'])
+
+                # Decode Base64 String into Bytes
+                temp_value = base64.b64decode(temp_value)
+
+                # Retrieve Information about int8 or uint8
+                if 'metadata' in _dict and 'dataType' in _dict['metadata']:
+                    datatype = _dict['metadata']['dataType']['value']
+                else:
+                    raise ValueError(
+                        'Unknown Object-Type: ' + _dict['type'] +
+                        '. The MetaData does not specify what the actual DataType is.')
+
+                # convert back to integers
+                if datatype == 'int8[]':
+                    temp_value = array.array('b', temp_value)
+                else:
+                    temp_value = array.array('B', temp_value)
+
+                # Change DataType to primitive python list
+                self.value = temp_value.tolist()
+
+            else:
+                # Maybe a class with key, value or another JSON object, check if you can iterate!
+                if not hasattr(_dict['value'], 'items'):
+                    raise ValueError(
+                        'Unknown Object-Type: ' + _dict['type'] +
+                        '. And it is not possible to iterate over this Object-Type!')
+
+                temp_dict = {}
+                for key, value in _dict['value'].items():
+                    rea = ReverseEntityAttribute(value, useMetaData)
+                    temp_dict[key] = rea.get_value()
+                self.value = temp_dict
+
+            print("+++ _dict['type'] == 'Property' and 'dataType' in _dict")
+            print("self.value: ", self.value)
+            return
 
         if not 'metadata' in _dict:
             useMetaData = False
