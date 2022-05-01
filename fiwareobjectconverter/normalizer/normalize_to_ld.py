@@ -10,6 +10,8 @@ Author: José Manuel Cantera
 
 from rfc3987 import parse
 etsi_core_context = 'https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld'
+shop4cf_context = ["https://smartdatamodels.org/context.jsonld",
+    "https://raw.githubusercontent.com/shop4cf/data-models/master/docs/shop4cfcontext.jsonld"]
 
 
 class LD_Normalizer:
@@ -61,14 +63,15 @@ class LD_Normalizer:
     # Do all the transformation work
     @classmethod
     def _normalized_to_ld(cls, entity, ld_context_uri):
-        if not ld_context_uri is None:
-            out = {
-                '@context': [ld_context_uri, etsi_core_context]
-            }
-        else:
-            out = {
-                '@context': [etsi_core_context]
-            }
+        #if not ld_context_uri is None:
+            #out = {
+                #'@context': [ld_context_uri, etsi_core_context]
+            #}
+        #else:
+            #out = {
+                #'@context': [etsi_core_context]
+            #}
+        out = {'@context': shop4cf_context}
 
         for key in entity:
             if key == 'id':
